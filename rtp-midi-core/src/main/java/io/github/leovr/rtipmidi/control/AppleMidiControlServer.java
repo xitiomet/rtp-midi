@@ -57,6 +57,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
     @Setter(AccessLevel.PACKAGE)
     private int ssrc;
     private final String name;
+    private final String hostname;
     private final AppleMidiCommandHandler handler;
     private DatagramSocket socket;
     private final List<AppleMidiServer> acceptedServers = new ArrayList<>();
@@ -66,8 +67,8 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
      * @param name The name under which the other peers should see this server
      * @param port The control port
      */
-    public AppleMidiControlServer(@Nonnull final String name, final int port) {
-        this(new AppleMidiCommandHandler(), name, port);
+    public AppleMidiControlServer(final String hostname, @Nonnull final String name, final int port) {
+        this(new AppleMidiCommandHandler(), hostname,  name, port);
     }
 
     /**
@@ -75,10 +76,11 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
      * @param name    The name under which the other peers should see this server
      * @param port    The control port
      */
-    AppleMidiControlServer(@Nonnull final AppleMidiCommandHandler handler, @Nonnull final String name, final int port) {
+    AppleMidiControlServer(@Nonnull final AppleMidiCommandHandler handler, final String hostname,  @Nonnull final String name, final int port) {
         super(name + THREAD_SUFFIX);
         this.handler = handler;
         this.port = port;
+        this.hostname = hostname;
         this.name = name;
         handler.registerListener(this);
     }
@@ -89,14 +91,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
         try {
             socket = initDatagramSocket();
             socket.setSoTimeout(SOCKET_TIMEOUT);
-
-            String hostName;
-            try {
-                hostName = InetAddress.getLocalHost().getHostName();
-            } catch (final UnknownHostException e) {
-                hostName = "";
-            }
-            initialize(hostName);
+            initialize(this.hostname);
         } catch (final SocketException e) {
             throw new AppleMidiControlServerRuntimeException("DatagramSocket cannot be opened", e);
         }

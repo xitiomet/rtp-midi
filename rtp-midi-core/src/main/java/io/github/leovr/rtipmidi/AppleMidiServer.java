@@ -7,6 +7,9 @@ import io.github.leovr.rtipmidi.session.AppleMidiSessionServer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -26,9 +29,10 @@ public class AppleMidiServer implements SessionChangeListener {
 
     /**
      * Creates a {@link AppleMidiServer} with {@link #DEFAULT_NAME} and {@link #DEFAULT_PORT}
+     * @throws UnknownHostException
      */
-    public AppleMidiServer() {
-        this(DEFAULT_NAME, DEFAULT_PORT);
+    public AppleMidiServer() throws UnknownHostException {
+        this(InetAddress.getLocalHost().getHostName(), DEFAULT_NAME, DEFAULT_PORT);
     }
 
     /**
@@ -37,9 +41,9 @@ public class AppleMidiServer implements SessionChangeListener {
      * @param name The name under which the other peers should see this server
      * @param port The control port. A session server will be created on the {@code port + 1}
      */
-    public AppleMidiServer(@Nonnull final String name, final int port) {
+    public AppleMidiServer(final String hostname, @Nonnull final String name, final int port) {
         this.port = port;
-        controlServer = new AppleMidiControlServer(name, port);
+        controlServer = new AppleMidiControlServer(hostname, name, port);
         sessionServer = new AppleMidiSessionServer(name, port + 1);
         sessionServer.registerSessionChangeListener(this);
         controlServer.registerEndSessionListener(sessionServer);
