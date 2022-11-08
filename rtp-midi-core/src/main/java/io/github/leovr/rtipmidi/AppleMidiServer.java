@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 import javax.annotation.Nonnull;
@@ -32,7 +33,7 @@ public class AppleMidiServer implements SessionChangeListener {
      * @throws UnknownHostException
      */
     public AppleMidiServer() throws UnknownHostException {
-        this(InetAddress.getLocalHost().getHostName(), DEFAULT_NAME, DEFAULT_PORT);
+        this(InetAddress.getLocalHost(), DEFAULT_NAME, DEFAULT_PORT);
     }
 
     /**
@@ -41,9 +42,9 @@ public class AppleMidiServer implements SessionChangeListener {
      * @param name The name under which the other peers should see this server
      * @param port The control port. A session server will be created on the {@code port + 1}
      */
-    public AppleMidiServer(final String hostname, @Nonnull final String name, final int port) {
+    public AppleMidiServer(final InetAddress socketAddress, @Nonnull final String name, final int port) {
         this.port = port;
-        controlServer = new AppleMidiControlServer(hostname, name, port);
+        controlServer = new AppleMidiControlServer(socketAddress, name, port);
         sessionServer = new AppleMidiSessionServer(name, port + 1);
         sessionServer.registerSessionChangeListener(this);
         controlServer.registerEndSessionListener(sessionServer);
