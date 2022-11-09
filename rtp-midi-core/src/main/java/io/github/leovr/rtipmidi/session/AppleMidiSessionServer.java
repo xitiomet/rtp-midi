@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -57,6 +59,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
     private final ExecutorService executorService;
     private final int ssrc;
     private final String name;
+    private final InetAddress inetAddress;
     private final AppleMidiCommandHandler midiCommandHandler = new AppleMidiCommandHandler();
     private final AppleMidiMessageHandler midiMessageHandler = new AppleMidiMessageHandler();
     private final int port;
@@ -71,16 +74,16 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
      * @param name The name under which the other peers should see this server
      * @param port The session server port which must be {@code control port + 1}
      */
-    public AppleMidiSessionServer(@Nonnull final String name, final int port) {
-        this(name, port, Executors.newCachedThreadPool());
+    public AppleMidiSessionServer(final InetAddress inetAddress, @Nonnull final String name, final int port) {
+        this(inetAddress, name, port, Executors.newCachedThreadPool());
     }
 
-    AppleMidiSessionServer(@Nonnull final String name, final int port, final ExecutorService executorService) {
+    AppleMidiSessionServer(final InetAddress inetAddress, @Nonnull final String name, final int port, final ExecutorService executorService) {
         this.port = port;
         this.ssrc = new Random().nextInt();
         this.name = name;
         this.executorService = executorService;
-
+        this.inetAddress = inetAddress;
         midiCommandHandler.registerListener(this);
         midiMessageHandler.registerListener(this);
     }
@@ -102,7 +105,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
     }
 
     DatagramSocket createSocket() throws SocketException {
-        return new DatagramSocket(port);
+        return new DatagramSocket(port, this.inetAddress);
     }
 
     @Override

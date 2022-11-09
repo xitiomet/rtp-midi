@@ -45,7 +45,7 @@ public class AppleMidiServer implements SessionChangeListener {
     public AppleMidiServer(final InetAddress socketAddress, @Nonnull final String name, final int port) {
         this.port = port;
         controlServer = new AppleMidiControlServer(socketAddress, name, port);
-        sessionServer = new AppleMidiSessionServer(name, port + 1);
+        sessionServer = new AppleMidiSessionServer(socketAddress, name, port + 1);
         sessionServer.registerSessionChangeListener(this);
         controlServer.registerEndSessionListener(sessionServer);
     }
