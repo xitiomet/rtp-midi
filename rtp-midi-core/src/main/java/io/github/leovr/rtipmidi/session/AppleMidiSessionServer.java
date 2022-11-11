@@ -175,7 +175,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
             final AppleMidiSession appleMidiSession = sessions.pop();
             final AppleMidiSessionConnection connection =
                     new AppleMidiSessionConnection(appleMidiSession, appleMidiServer, ssrc, this);
-            appleMidiSession.setSender(connection);
+            appleMidiSession.addSender(connection);
             currentSessions.put(invitation.getSsrc(), connection);
             notifyMaxNumberOfSessions();
         } else {
@@ -183,6 +183,12 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
                     new AppleMidiInvitationDeclined(invitation.getProtocolVersion(), invitation.getInitiatorToken(),
                             ssrc, name));
         }
+    }
+
+    @Override
+    public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted acceptance,
+            @Nonnull AppleMidiServer appleMidiServer) {
+        System.err.println("Midi Invitation Accepted - SessionServer");
     }
 
     /**
@@ -205,7 +211,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
     @Override
     public void onClockSynchronization(@Nonnull final AppleMidiClockSynchronization clockSynchronization,
                                        @Nonnull final AppleMidiServer appleMidiServer) {
-        if (clockSynchronization.getCount() == (byte) 0) {
+        if (clockSynchronization.getCount() == (byte) 0) { // CK0 Sequence
             final AppleMidiSessionConnection sessionTuple = currentSessions.get(clockSynchronization.getSsrc());
             final long currentTimestamp;
             if (sessionTuple != null) {
@@ -227,7 +233,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
             } catch (final IOException e) {
                 log.error("IOException while sending clock synchronization", e);
             }
-        } else if (clockSynchronization.getCount() == (byte) 2) {
+        } else if (clockSynchronization.getCount() == (byte) 2) { // CK2 Sequence
             final long offsetEstimate =
                     (clockSynchronization.getTimestamp3() + clockSynchronization.getTimestamp1()) / 2 -
                             clockSynchronization.getTimestamp2();
@@ -250,7 +256,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         final AppleMidiSessionConnection midiServer = currentSessions.get(appleMidiEndSession.getSsrc());
         if (midiServer != null) {
             final AppleMidiSession appleMidiSession = midiServer.getAppleMidiSession();
-            appleMidiSession.setSender(null);
+            appleMidiSession.removeSender(midiServer);
             appleMidiSession.onEndSession(appleMidiEndSession, appleMidiServer);
         }
         final AppleMidiSessionConnection sessionTuple = currentSessions.remove(appleMidiEndSession.getSsrc());
@@ -330,5 +336,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
     public void unregisterSessionChangeListener(@Nonnull final SessionChangeListener listener) {
         sessionChangeListeners.remove(listener);
     }
+
+    
 
 }

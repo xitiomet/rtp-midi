@@ -247,4 +247,11 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
         endSessionListeners.remove(listener);
     }
 
+    @Override
+    public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted acceptance,
+            @Nonnull AppleMidiServer appleMidiServer) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

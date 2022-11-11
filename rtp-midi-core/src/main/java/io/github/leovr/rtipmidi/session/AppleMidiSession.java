@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nonnull;
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -26,8 +27,7 @@ import java.util.Random;
 public abstract class AppleMidiSession implements AppleMidiMessageListener, AppleMidiCommandListener {
 
     private long offsetEstimate;
-    @Setter
-    private AppleMidiSessionSender sender;
+    private ArrayList<AppleMidiSessionSender> senders = new ArrayList<AppleMidiSessionSender>();
     @Setter
     protected int timestampOffset = new Random().nextInt();
 
@@ -62,11 +62,21 @@ public abstract class AppleMidiSession implements AppleMidiMessageListener, Appl
      * @param timestamp The timestamp of the message
      */
     public void sendMidiMessage(final MidiMessage message, final long timestamp) {
-        if (sender == null) {
-            log.trace("No sender available. Not sending message");
-            return;
-        }
-        sender.sendMidiMessage(message, timestamp);
+        senders.forEach((sender) -> {
+            sender.sendMidiMessage(message, timestamp);
+        });
+    }
+
+    public void addSender(AppleMidiSessionSender sender)
+    {
+        if (!senders.contains(sender))
+            senders.add(sender);
+    }
+
+    public void removeSender(AppleMidiSessionSender sender)
+    {
+        if (senders.contains(sender))
+            senders.remove(sender);
     }
 
     @Override
