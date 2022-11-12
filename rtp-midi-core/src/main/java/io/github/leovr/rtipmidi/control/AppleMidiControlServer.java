@@ -254,4 +254,11 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
         
     }
 
+    @Override
+    public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined decline,
+            @Nonnull AppleMidiServer appleMidiServer) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

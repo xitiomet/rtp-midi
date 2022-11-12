@@ -2,6 +2,7 @@ package io.github.leovr.rtipmidi;
 
 import io.github.leovr.rtipmidi.error.AppleMidiSessionInstantiationException;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationAccepted;
+import io.github.leovr.rtipmidi.messages.AppleMidiInvitationDeclined;
 import io.github.leovr.rtipmidi.model.AppleMidiServer;
 import io.github.leovr.rtipmidi.session.AppleMidiSession;
 
@@ -122,6 +123,13 @@ public class MidiDeviceAppleMidiSession extends JavaxAppleMidiSession {
 
     @Override
     public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted acceptance,
+            @Nonnull AppleMidiServer appleMidiServer) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined decline,
             @Nonnull AppleMidiServer appleMidiServer) {
         // TODO Auto-generated method stub
         

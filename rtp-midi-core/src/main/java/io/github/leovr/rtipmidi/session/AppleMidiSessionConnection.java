@@ -51,8 +51,6 @@ class AppleMidiSessionConnection implements AppleMidiSessionSender {
         final RtpHeader rtpHeader =
                 new RtpHeader((byte) 2, false, false, (byte) 0, false, (byte) 97, sequenceNumber, rtpTimestamp, ssrc);
         log.trace("Sending RTP-Header: {}", rtpHeader);
-        if (appleMidiMessageSender instanceof AppleMidiSessionClient)
-            System.err.println("Connection Midi FROM "+ String.valueOf(ssrc));
 
         final boolean b = message.getLength() > 15;
         final MidiCommandHeader midiCommandHeader =

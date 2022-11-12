@@ -4,6 +4,7 @@ import io.github.leovr.rtipmidi.AppleMidiCommandListener;
 import io.github.leovr.rtipmidi.messages.AppleMidiClockSynchronization;
 import io.github.leovr.rtipmidi.messages.AppleMidiEndSession;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationAccepted;
+import io.github.leovr.rtipmidi.messages.AppleMidiInvitationDeclined;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationRequest;
 import io.github.leovr.rtipmidi.messages.CommandWord;
 import io.github.leovr.rtipmidi.model.AppleMidiServer;
@@ -35,7 +36,7 @@ public class AppleMidiCommandHandler {
     }
 
     public void handle(@Nonnull final byte[] data, @Nonnull final AppleMidiServer appleMidiServer) {
-        System.err.println("Command Recieved (" + String.valueOf(appleMidiServer.getPort()) + ") " + String.valueOf(data));
+        //System.err.println("Command Recieved (" + String.valueOf(appleMidiServer.getPort()) + ") " + String.valueOf(data));
         final DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(data));
         try {
             final byte header1 = dataInputStream.readByte();
@@ -73,8 +74,10 @@ public class AppleMidiCommandHandler {
                     handleEndSession(dataInputStream, appleMidiServer);
                     break;
                 case OK:
-                    System.err.println("RECEIVED OK!!!");
                     handleInvitationAccepted(dataInputStream, appleMidiServer);
+                    break;
+                case NO:
+                    handleInvitationRejected(dataInputStream, appleMidiServer);
                     break;
                 default:
                     System.err.println("Unknown RTP Command: " + commandWord.toString());
@@ -156,6 +159,27 @@ public class AppleMidiCommandHandler {
         final String name = scanner.next();
         for (final AppleMidiCommandListener listener : listeners) {
             listener.onMidiInvitationAccepted(new AppleMidiInvitationAccepted(protocolVersion, initiatorToken, ssrc, name),
+                    appleMidiServer);
+        }
+    }
+
+    private void handleInvitationRejected(final DataInputStream dataInputStream, final AppleMidiServer appleMidiServer) throws
+    IOException {
+        final int protocolVersion = dataInputStream.readInt();
+        if (protocolVersion != PROTOCOL_VERSION) {
+            log.info("Protocol version: {} did not match version {}", protocolVersion, PROTOCOL_VERSION);
+            return;
+        }
+        final int initiatorToken = dataInputStream.readInt();
+        final int ssrc = dataInputStream.readInt();
+        final Scanner scanner = new Scanner(dataInputStream, UTF_8.name()).useDelimiter(NUL_TERMINATOR);
+        if (!scanner.hasNext()) {
+            log.info("Could not find \\0 terminating string");
+            return;
+        }
+        final String name = scanner.next();
+        for (final AppleMidiCommandListener listener : listeners) {
+            listener.onMidiInvitationDeclined(new AppleMidiInvitationDeclined(protocolVersion, initiatorToken, ssrc, name),
                     appleMidiServer);
         }
     }

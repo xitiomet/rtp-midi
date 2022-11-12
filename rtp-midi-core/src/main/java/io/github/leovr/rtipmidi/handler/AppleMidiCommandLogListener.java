@@ -3,6 +3,7 @@ package io.github.leovr.rtipmidi.handler;
 import io.github.leovr.rtipmidi.AppleMidiCommandListener;
 import io.github.leovr.rtipmidi.messages.AppleMidiEndSession;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationAccepted;
+import io.github.leovr.rtipmidi.messages.AppleMidiInvitationDeclined;
 import io.github.leovr.rtipmidi.model.AppleMidiServer;
 import io.github.leovr.rtipmidi.messages.AppleMidiClockSynchronization;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationRequest;
@@ -33,6 +34,13 @@ class AppleMidiCommandLogListener implements AppleMidiCommandListener {
 
     @Override
     public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted acceptance,
+            @Nonnull AppleMidiServer appleMidiServer) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined decline,
             @Nonnull AppleMidiServer appleMidiServer) {
         // TODO Auto-generated method stub
         

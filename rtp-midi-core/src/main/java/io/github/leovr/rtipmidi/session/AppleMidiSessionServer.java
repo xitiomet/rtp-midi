@@ -337,6 +337,13 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         sessionChangeListeners.remove(listener);
     }
 
+    @Override
+    public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined decline,
+            @Nonnull AppleMidiServer appleMidiServer) {
+        // TODO Auto-generated method stub
+        
+    }
+
     
 
 }
