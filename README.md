@@ -15,7 +15,7 @@ Currently this library can only be used as a RTP-MIDI session listener.
 
 To announce the server via Apple's bonjour the [jMDNS](https://github.com/jmdns/jmdns) library can be used.
 
-###Demo
+###Demo Server
 
     public class Application {
     
@@ -44,8 +44,46 @@ To announce the server via Apple's bonjour the [jMDNS](https://github.com/jmdns/
         }
     }
 
+###Demo Client
+
+    public class Application {
+    
+        public static void main(final String[] args) throws InterruptedException {
+            try {
+                AppleMidiSession session = new AppleMidiSession()
+                {
+                    protected void onMidiMessage(final io.github.leovr.rtipmidi.model.MidiMessage message, final long timestamp)
+                    {
+                        
+                    }
+
+                    protected void onMidiInvitation(AppleMidiInvitationRequest req, AppleMidiServer server)
+                    {
+                        System.err.println("RTP Invitation from " + req.getName());
+                    }
+
+                    @Override
+                    public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted arg0,
+                            @Nonnull io.github.leovr.rtipmidi.model.AppleMidiServer arg1) {
+                        System.err.println("RTP Invitation accepted by " + arg0.getName());
+
+                        
+                    }
+
+                    @Override
+                    public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined arg0,
+                            @Nonnull io.github.leovr.rtipmidi.model.AppleMidiServer arg1) {
+                        System.err.println("RTP Invitation declined by " + arg0.getName());
+                    }
+                AppleMidiSessionClient client = new AppleMidiSessionClient("Remote Server Name", InetAddress.getByName(ipAddress), 5004, "Local Server Name");
+                client.start();
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
 ## ToDo
 * Implement journaling
 * Implement missing session protocol commands
-* Implement session initiation

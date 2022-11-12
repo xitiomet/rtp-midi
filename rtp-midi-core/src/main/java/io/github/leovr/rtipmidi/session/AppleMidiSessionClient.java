@@ -70,7 +70,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
     private final int port;
     private final AppleMidiCommandHandler midiCommandHandler = new AppleMidiCommandHandler();
     private final AppleMidiMessageHandler midiMessageHandler = new AppleMidiMessageHandler();
-    private boolean running = true;
+    private boolean running = false;
     private DatagramSocket controlSocket;
     private DatagramSocket sessionSocket;
     private AppleMidiSession session;
@@ -117,6 +117,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
 
     public synchronized void start() 
     {
+        this.running = true;
         this.lastClockSyncAt = 0;
         this.executorService = Executors.newCachedThreadPool();
         this.controlThread = new Thread(this.controlRunnable, this.remoteName + ".control");
@@ -217,7 +218,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
                     {
                         sendClockSync();
                     } catch (Exception scsEx) {
-                        
+
                     }
                 }
             }
