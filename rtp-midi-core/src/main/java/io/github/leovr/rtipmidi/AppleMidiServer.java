@@ -50,6 +50,16 @@ public class AppleMidiServer implements SessionChangeListener {
         controlServer.registerEndSessionListener(sessionServer);
     }
 
+    public boolean hasConnection(InetAddress address, int port)
+    {
+        return this.sessionServer.hasConnection(address, port);
+    }
+
+    public void closeConnection(InetAddress address, int port)
+    {
+        this.controlServer.closeConnection(address, port);
+    }
+
     /**
      * Add a new {@link AppleMidiSession} to this server
      *

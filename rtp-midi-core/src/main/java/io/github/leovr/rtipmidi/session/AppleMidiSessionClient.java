@@ -158,6 +158,11 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
         return false;
     }
 
+    public boolean hasServerConnection(io.github.leovr.rtipmidi.AppleMidiServer server)
+    {
+        return server.hasConnection(this.inetAddress, this.getSessionPort());
+    }
+
     public String getRemoteName()
     {
         return this.remoteName;
@@ -166,6 +171,16 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
     public String getLocalName()
     {
         return this.localName;
+    }
+
+    public InetAddress getRemoteAddress()
+    {
+        return this.inetAddress;
+    }
+
+    public String getRemoteAddressString()
+    {
+        return this.getRemoteAddress().toString();
     }
 
     public int getControlPort()

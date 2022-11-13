@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 
 import javax.annotation.Nonnull;
+import java.util.Iterator;
+
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.DatagramPacket;
@@ -106,6 +108,19 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
 
     DatagramSocket createSocket() throws SocketException {
         return new DatagramSocket(port, this.inetAddress);
+    }
+
+    public boolean hasConnection(InetAddress address, int port)
+    {
+        Iterator<AppleMidiSessionConnection> connections = currentSessions.values().iterator();
+        while(connections.hasNext())
+        {
+            AppleMidiSessionConnection connection = connections.next();
+            AppleMidiServer server = connection.getAppleMidiServer();
+            if (server.getInetAddress().equals(address) && server.getPort() == port)
+                return true;
+        }
+        return false;
     }
 
     @Override
