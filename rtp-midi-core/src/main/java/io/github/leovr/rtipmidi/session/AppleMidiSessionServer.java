@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -123,6 +124,35 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         return false;
     }
 
+    public void closeConnection(InetAddress address, int port)
+    {
+        AppleMidiSessionConnection conn = null;
+        int rSsrc = 0;
+        for (final Entry<Integer, AppleMidiSessionConnection> sessionConnection : currentSessions.entrySet())
+        {
+            AppleMidiServer server = sessionConnection.getValue().getAppleMidiServer();
+            if (server.getInetAddress().equals(address) && server.getPort() == port)
+            {
+                conn = sessionConnection.getValue();
+                rSsrc = sessionConnection.getKey();
+            }
+        }
+        if (conn != null)
+        {
+            try
+            {
+                AppleMidiServer server = conn.getAppleMidiServer();
+                System.err.println("Found Session connection to close " + server.toString());
+                AppleMidiEndSession goodbye = new AppleMidiEndSession(2, conn.getInitiatorToken(), rSsrc);
+                this.send(goodbye, server);
+                onEndSession(goodbye, server);
+            } catch (Exception e2) {
+                e2.printStackTrace(System.err);
+            }
+        }
+    }
+
+
     @Override
     public void run() {
         while (running) {
@@ -190,6 +220,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
             final AppleMidiSession appleMidiSession = sessions.pop();
             final AppleMidiSessionConnection connection =
                     new AppleMidiSessionConnection(appleMidiSession, appleMidiServer, ssrc, this);
+            connection.setInitiatorToken(invitation.getInitiatorToken());
             appleMidiSession.addSender(connection);
             currentSessions.put(invitation.getSsrc(), connection);
             notifyMaxNumberOfSessions();
@@ -276,6 +307,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         }
         final AppleMidiSessionConnection sessionTuple = currentSessions.remove(appleMidiEndSession.getSsrc());
         if (sessionTuple != null) {
+            System.err.println("sessionTuple Removed");
             sessions.add(sessionTuple.getAppleMidiSession());
             notifyMaxNumberOfSessions();
         }

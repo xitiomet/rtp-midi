@@ -231,18 +231,24 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
 
     public void closeConnection(InetAddress address, int port)
     {
+        AppleMidiServer dServer = null;
         for (final AppleMidiServer server : acceptedServers)
         {
             if (server.getInetAddress().equals(address) && server.getPort() == port)
             {
-                try
-                {
-                    AppleMidiEndSession goodbye = new AppleMidiEndSession(2, getNewInitiatorToken(), this.ssrc);
-                    this.send(goodbye, new AppleMidiServer(address, port));
-                    onEndSession(goodbye, server);
-                } catch (Exception e2) {
-                    e2.printStackTrace(System.err);
-                }
+                dServer = server;
+            }
+        }
+        if (dServer != null)
+        {
+            System.err.println("Found Control connection to close " + dServer.toString());
+            try
+            {
+                AppleMidiEndSession goodbye = new AppleMidiEndSession(2, getNewInitiatorToken(), this.ssrc);
+                this.send(goodbye, dServer);
+                onEndSession(goodbye, dServer);
+            } catch (Exception e2) {
+                e2.printStackTrace(System.err);
             }
         }
     }

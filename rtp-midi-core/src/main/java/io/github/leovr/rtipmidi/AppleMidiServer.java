@@ -58,6 +58,7 @@ public class AppleMidiServer implements SessionChangeListener {
     public void closeConnection(InetAddress address, int port)
     {
         this.controlServer.closeConnection(address, port);
+        this.sessionServer.closeConnection(address, port+1);
     }
 
     /**
