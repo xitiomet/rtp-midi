@@ -44,12 +44,14 @@ To announce the server via Apple's bonjour the [jMDNS](https://github.com/jmdns/
         }
     }
 
-###Demo Client
+###Demo Client (Implemented by @xitiomet)
 
     public class Application {
     
         public static void main(final String[] args) throws InterruptedException {
             try {
+
+                // Same session can be used for client and server. new methods added "onMidiInvitationAccepted" and "onMidiInvitationDeclined"
                 AppleMidiSession session = new AppleMidiSession()
                 {
                     protected void onMidiMessage(final io.github.leovr.rtipmidi.model.MidiMessage message, final long timestamp)
@@ -76,6 +78,7 @@ To announce the server via Apple's bonjour the [jMDNS](https://github.com/jmdns/
                         System.err.println("RTP Invitation declined by " + arg0.getName());
                     }
                 AppleMidiSessionClient client = new AppleMidiSessionClient("Remote Server Name", InetAddress.getByName(ipAddress), 5004, "Local Server Name");
+                client.setAppleMidiSession(session);
                 client.start();
             } catch (final IOException e) {
                 e.printStackTrace();

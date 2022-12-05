@@ -111,14 +111,31 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         return new DatagramSocket(port, this.inetAddress);
     }
 
-    public boolean hasConnection(InetAddress address, int port)
+    private static String cleanAddress(InetAddress address)
     {
+        if (address != null)
+        {
+            String sAddress = address.toString();
+            if (sAddress == null) sAddress = "";
+            if (sAddress.startsWith("/"))
+                sAddress = sAddress.substring(1);
+            return sAddress;
+        } else {
+            return "";
+        }
+    }
+
+    public boolean hasConnection(String remoteName, InetAddress address, int port)
+    {
+        String sAddress = cleanAddress(address);
         Iterator<AppleMidiSessionConnection> connections = currentSessions.values().iterator();
         while(connections.hasNext())
         {
             AppleMidiSessionConnection connection = connections.next();
             AppleMidiServer server = connection.getAppleMidiServer();
-            if (server.getInetAddress().equals(address) && server.getPort() == port)
+            String rAddress = cleanAddress(server.getInetAddress());
+            //System.err.println("Comparing " + remoteName + "(" + sAddress + ":"  + String.valueOf(port)+ ") & " + connection.getName()  + "(" + rAddress + ":" + String.valueOf(server.getPort()) + ")");
+            if (rAddress.equals(sAddress) && remoteName.equals(connection.getName()))
                 return true;
         }
         return false;
@@ -221,6 +238,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
             final AppleMidiSessionConnection connection =
                     new AppleMidiSessionConnection(appleMidiSession, appleMidiServer, ssrc, this);
             connection.setInitiatorToken(invitation.getInitiatorToken());
+            connection.setName(invitation.getName());
             appleMidiSession.addSender(connection);
             currentSessions.put(invitation.getSsrc(), connection);
             notifyMaxNumberOfSessions();

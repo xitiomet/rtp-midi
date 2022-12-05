@@ -31,6 +31,7 @@ class AppleMidiSessionConnection implements AppleMidiSessionSender {
     @Nonnull
     private final AppleMidiMessageSender appleMidiMessageSender;
     private int initiatorToken;
+    private String name;
 
     @Getter(AccessLevel.NONE)
     private short sequenceNumber = (short) new Random().nextInt(Short.MAX_VALUE + 1);
@@ -52,6 +53,16 @@ class AppleMidiSessionConnection implements AppleMidiSessionSender {
     public int getInitiatorToken()
     {
         return this.initiatorToken;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public String getName()
+    {
+        return this.name;
     }
 
     @Override

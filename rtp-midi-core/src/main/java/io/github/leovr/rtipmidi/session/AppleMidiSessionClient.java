@@ -160,7 +160,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
 
     public boolean hasServerConnection(io.github.leovr.rtipmidi.AppleMidiServer server)
     {
-        return server.hasConnection(this.inetAddress, this.getSessionPort());
+        return server.hasConnection(this.remoteName, this.inetAddress, this.getSessionPort());
     }
 
     public String getRemoteName()

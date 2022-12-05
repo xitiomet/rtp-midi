@@ -50,9 +50,9 @@ public class AppleMidiServer implements SessionChangeListener {
         controlServer.registerEndSessionListener(sessionServer);
     }
 
-    public boolean hasConnection(InetAddress address, int port)
+    public boolean hasConnection(String remoteName, InetAddress address, int port)
     {
-        return this.sessionServer.hasConnection(address, port);
+        return this.sessionServer.hasConnection(remoteName, address, port);
     }
 
     public void closeConnection(InetAddress address, int port)
