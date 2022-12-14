@@ -3,7 +3,7 @@ package io.github.leovr.rtipmidi;
 import io.github.leovr.rtipmidi.error.AppleMidiSessionInstantiationException;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationAccepted;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationDeclined;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 import io.github.leovr.rtipmidi.session.AppleMidiSession;
 
 import javax.annotation.Nonnull;
@@ -37,14 +37,14 @@ public class MidiReceiverAppleMidiSession extends JavaxAppleMidiSession {
 
     @Override
     public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted acceptance,
-            @Nonnull AppleMidiServer appleMidiServer) {
+            @Nonnull AppleMidiServerAddress appleMidiServer) {
         // TODO Auto-generated method stub
         
     }
 
     @Override
     public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined decline,
-            @Nonnull AppleMidiServer appleMidiServer) {
+            @Nonnull AppleMidiServerAddress appleMidiServer) {
         // TODO Auto-generated method stub
         
     }

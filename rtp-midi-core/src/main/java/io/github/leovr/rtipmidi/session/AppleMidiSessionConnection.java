@@ -4,7 +4,7 @@ import io.github.leovr.rtipmidi.messages.AppleMidiMessage;
 import io.github.leovr.rtipmidi.messages.MidiCommandHeader;
 import io.github.leovr.rtipmidi.messages.MidiTimestampPair;
 import io.github.leovr.rtipmidi.messages.RtpHeader;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 import io.github.leovr.rtipmidi.model.MidiMessage;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.Random;
 
 /**
- * This class represents a connection between the local session and the remote {@link AppleMidiServer}. The connections
+ * This class represents a connection between the local session and the remote {@link AppleMidiServerAddress}. The connections
  * is able to send {@link MidiMessage}s to the {@link AppleMidiMessageSender}.
  */
 @Getter
@@ -26,7 +26,7 @@ class AppleMidiSessionConnection implements AppleMidiSessionSender {
     @Nonnull
     private final AppleMidiSession appleMidiSession;
     @Nonnull
-    private final AppleMidiServer appleMidiServer;
+    private final AppleMidiServerAddress appleMidiServerAddress;
     private final int ssrc;
     @Nonnull
     private final AppleMidiMessageSender appleMidiMessageSender;
@@ -37,10 +37,10 @@ class AppleMidiSessionConnection implements AppleMidiSessionSender {
     private short sequenceNumber = (short) new Random().nextInt(Short.MAX_VALUE + 1);
 
     public AppleMidiSessionConnection(@Nonnull final AppleMidiSession appleMidiSession,
-                                      @Nonnull final AppleMidiServer appleMidiServer, final int ssrc,
+                                      @Nonnull final AppleMidiServerAddress appleMidiServer, final int ssrc,
                                       @Nonnull final AppleMidiMessageSender appleMidiMessageSender) {
         this.appleMidiSession = appleMidiSession;
-        this.appleMidiServer = appleMidiServer;
+        this.appleMidiServerAddress = appleMidiServer;
         this.ssrc = ssrc;
         this.appleMidiMessageSender = appleMidiMessageSender;
     }
@@ -81,9 +81,9 @@ class AppleMidiSessionConnection implements AppleMidiSessionSender {
                 new AppleMidiMessage(midiCommandHeader, Collections.singletonList(new MidiTimestampPair(0, message)));
 
         try {
-            appleMidiMessageSender.send(appleMidiMessage, appleMidiServer);
+            appleMidiMessageSender.send(appleMidiMessage, appleMidiServerAddress);
         } catch (final IOException e) {
-            log.error("Error sending MidiMessage to {}", appleMidiServer, e);
+            log.error("Error sending MidiMessage to {}", appleMidiServerAddress, e);
             e.printStackTrace(System.err);
         }
     }

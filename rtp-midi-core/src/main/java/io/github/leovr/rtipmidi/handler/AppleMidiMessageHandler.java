@@ -5,7 +5,7 @@ import io.github.leovr.rtipmidi.messages.AppleMidiMessage;
 import io.github.leovr.rtipmidi.messages.MidiCommandHeader;
 import io.github.leovr.rtipmidi.messages.MidiTimestampPair;
 import io.github.leovr.rtipmidi.messages.RtpHeader;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 import io.github.leovr.rtipmidi.model.ShortMessage;
 import io.github.leovr.rtipmidi.model.SysexMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class AppleMidiMessageHandler {
         listeners.add(new AppleMidiMessageLogListener());
     }
 
-    public void handle(@Nonnull final byte[] data, @Nonnull final AppleMidiServer appleMidiServer) {
+    public void handle(@Nonnull final byte[] data, @Nonnull final AppleMidiServerAddress appleMidiServer) {
         try (final DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(data))) {
             final byte header1 = dataInputStream.readByte();
             final byte version = (byte) ((header1 >> 6) & 0x03);

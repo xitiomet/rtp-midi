@@ -6,7 +6,7 @@ import io.github.leovr.rtipmidi.messages.AppleMidiClockSynchronization;
 import io.github.leovr.rtipmidi.messages.AppleMidiEndSession;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationRequest;
 import io.github.leovr.rtipmidi.messages.MidiCommandHeader;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 import io.github.leovr.rtipmidi.model.MidiMessage;
 import lombok.Getter;
 import lombok.Setter;
@@ -81,17 +81,17 @@ public abstract class AppleMidiSession implements AppleMidiMessageListener, Appl
 
     @Override
     public final void onMidiInvitation(@Nonnull final AppleMidiInvitationRequest invitation,
-                                       @Nonnull final AppleMidiServer appleMidiServer) {
+                                       @Nonnull final AppleMidiServerAddress appleMidiServer) {
     }
 
     @Override
     public final void onClockSynchronization(@Nonnull final AppleMidiClockSynchronization clockSynchronization,
-                                             @Nonnull final AppleMidiServer appleMidiServer) {
+                                             @Nonnull final AppleMidiServerAddress appleMidiServer) {
     }
 
     @Override
     public final void onEndSession(@Nonnull final AppleMidiEndSession appleMidiEndSession,
-                                   @Nonnull final AppleMidiServer appleMidiServer) {
+                                   @Nonnull final AppleMidiServerAddress appleMidiServer) {
         onEndSession();
     }
 

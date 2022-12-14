@@ -7,7 +7,7 @@ import io.github.leovr.rtipmidi.messages.AppleMidiInvitationAccepted;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationDeclined;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationRequest;
 import io.github.leovr.rtipmidi.messages.CommandWord;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nonnull;
@@ -35,7 +35,7 @@ public class AppleMidiCommandHandler {
         listeners.add(new AppleMidiCommandLogListener());
     }
 
-    public void handle(@Nonnull final byte[] data, @Nonnull final AppleMidiServer appleMidiServer) {
+    public void handle(@Nonnull final byte[] data, @Nonnull final AppleMidiServerAddress appleMidiServer) {
         //System.err.println("Command Recieved (" + String.valueOf(appleMidiServer.getPort()) + ") " + String.valueOf(data));
         final DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(data));
         try {
@@ -88,7 +88,7 @@ public class AppleMidiCommandHandler {
         }
     }
 
-    private void handleEndSession(final DataInputStream dataInputStream, final AppleMidiServer appleMidiServer) throws
+    private void handleEndSession(final DataInputStream dataInputStream, final AppleMidiServerAddress appleMidiServer) throws
             IOException {
         final int protocolVersion = dataInputStream.readInt();
         if (protocolVersion != PROTOCOL_VERSION) {
@@ -103,7 +103,7 @@ public class AppleMidiCommandHandler {
     }
 
     private void handleSynchronization(final DataInputStream dataInputStream,
-                                       final AppleMidiServer appleMidiServer) throws IOException {
+                                       final AppleMidiServerAddress appleMidiServer) throws IOException {
         final int ssrc = dataInputStream.readInt();
         final byte count = dataInputStream.readByte();
         final int paddingBytes = dataInputStream.read(new byte[NUMBER_OF_PADDING_BYTES]);
@@ -121,7 +121,7 @@ public class AppleMidiCommandHandler {
         }
     }
 
-    private void handleInvitation(final DataInputStream dataInputStream, final AppleMidiServer appleMidiServer) throws
+    private void handleInvitation(final DataInputStream dataInputStream, final AppleMidiServerAddress appleMidiServer) throws
             IOException {
         final int protocolVersion = dataInputStream.readInt();
         if (protocolVersion != PROTOCOL_VERSION) {
@@ -142,7 +142,7 @@ public class AppleMidiCommandHandler {
         }
     }
 
-    private void handleInvitationAccepted(final DataInputStream dataInputStream, final AppleMidiServer appleMidiServer) throws
+    private void handleInvitationAccepted(final DataInputStream dataInputStream, final AppleMidiServerAddress appleMidiServer) throws
     IOException {
         final int protocolVersion = dataInputStream.readInt();
         if (protocolVersion != PROTOCOL_VERSION) {
@@ -163,7 +163,7 @@ public class AppleMidiCommandHandler {
         }
     }
 
-    private void handleInvitationRejected(final DataInputStream dataInputStream, final AppleMidiServer appleMidiServer) throws
+    private void handleInvitationRejected(final DataInputStream dataInputStream, final AppleMidiServerAddress appleMidiServer) throws
     IOException {
         final int protocolVersion = dataInputStream.readInt();
         if (protocolVersion != PROTOCOL_VERSION) {

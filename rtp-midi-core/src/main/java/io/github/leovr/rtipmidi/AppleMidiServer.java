@@ -1,6 +1,7 @@
 package io.github.leovr.rtipmidi;
 
 import io.github.leovr.rtipmidi.session.AppleMidiSession;
+import io.github.leovr.rtipmidi.session.AppleMidiSessionClient;
 import io.github.leovr.rtipmidi.session.SessionChangeListener;
 import io.github.leovr.rtipmidi.control.AppleMidiControlServer;
 import io.github.leovr.rtipmidi.session.AppleMidiSessionServer;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 import javax.annotation.Nonnull;
 
@@ -27,6 +29,9 @@ public class AppleMidiServer implements SessionChangeListener {
     private final int port;
     private final AppleMidiControlServer controlServer;
     private final AppleMidiSessionServer sessionServer;
+    private final ArrayList<AppleMidiSessionClient> clients;
+    private AppleMidiSession session;
+    private String name;
 
     /**
      * Creates a {@link AppleMidiServer} with {@link #DEFAULT_NAME} and {@link #DEFAULT_PORT}
@@ -44,10 +49,19 @@ public class AppleMidiServer implements SessionChangeListener {
      */
     public AppleMidiServer(final InetAddress socketAddress, @Nonnull final String name, final int port) {
         this.port = port;
+        this.name = name;
+        this.clients = new ArrayList<AppleMidiSessionClient>();
         controlServer = new AppleMidiControlServer(socketAddress, name, port);
-        sessionServer = new AppleMidiSessionServer(socketAddress, name, port + 1);
+        sessionServer = new AppleMidiSessionServer(socketAddress, name, port + 1, this);
         sessionServer.registerSessionChangeListener(this);
         controlServer.registerEndSessionListener(sessionServer);
+    }
+
+    public AppleMidiSessionClient connect(@Nonnull String remoteName, InetAddress address, int port)
+    {
+        AppleMidiSessionClient client = new AppleMidiSessionClient(remoteName, address, port, this.name);
+        this.clients.add(client);
+        return client;
     }
 
     public boolean hasConnection(String remoteName, InetAddress address, int port)
@@ -66,17 +80,13 @@ public class AppleMidiServer implements SessionChangeListener {
      *
      * @param session The session to be added
      */
-    public void addAppleMidiSession(@Nonnull final AppleMidiSession session) {
-        sessionServer.addAppleMidiSession(session);
+    public void setAppleMidiSession(@Nonnull final AppleMidiSession session) {
+        this.session = session;
     }
 
-    /**
-     * Remove the {@link AppleMidiSession} from this server
-     *
-     * @param session The session to be removed
-     */
-    public void removeAppleMidiSession(@Nonnull final AppleMidiSession session) {
-        sessionServer.removeAppleMidiSession(session);
+    public AppleMidiSession getAppleMidiSession()
+    {
+        return this.session;
     }
 
     @Override

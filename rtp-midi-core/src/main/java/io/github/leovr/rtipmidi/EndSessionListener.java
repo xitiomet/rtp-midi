@@ -13,5 +13,5 @@ public interface EndSessionListener {
      * @param appleMidiServer     The origin server of this message
      */
     void onEndSession(@Nonnull AppleMidiEndSession appleMidiEndSession,
-                      @Nonnull io.github.leovr.rtipmidi.model.AppleMidiServer appleMidiServer);
+                      @Nonnull io.github.leovr.rtipmidi.model.AppleMidiServerAddress appleMidiServer);
 }

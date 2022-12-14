@@ -13,6 +13,13 @@
     </modules>
 
     <name>rtp-midi</name>
+    <distributionManagement>
+        <repository>
+            <id>github-xitiomet</id>
+            <name>GitHub xitiomet Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/xitiomet/rtp-midi</url>
+        </repository>
+    </distributionManagement>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -23,13 +30,6 @@
         <useReleaseProfile>false</useReleaseProfile>
         <releaseProfiles>release</releaseProfiles>
     </properties>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <description>Java RTP-MIDI implementation</description>
     <url>https://github.com/leovr/rtp-midi</url>
@@ -61,21 +61,16 @@
             <url>https://leovr.github.io</url>
             <id>janmarten</id>
         </developer>
+        <developer>
+            <email>brian@openstatic.org</email>
+            <name>Brian Dunigan</name>
+            <url>https://xitiomet.github.io</url>
+            <id>xitiomet</id>
+        </developer>
     </developers>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.7</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>

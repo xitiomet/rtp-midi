@@ -2,6 +2,7 @@ package io.github.leovr.rtipmidi.session;
 
 import io.github.leovr.rtipmidi.AppleMidiCommandListener;
 import io.github.leovr.rtipmidi.AppleMidiMessageListener;
+import io.github.leovr.rtipmidi.AppleMidiServer;
 import io.github.leovr.rtipmidi.error.AppleMidiSessionServerRuntimeException;
 import io.github.leovr.rtipmidi.handler.AppleMidiCommandHandler;
 import io.github.leovr.rtipmidi.handler.AppleMidiMessageHandler;
@@ -14,7 +15,7 @@ import io.github.leovr.rtipmidi.messages.AppleMidiInvitationDeclined;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationRequest;
 import io.github.leovr.rtipmidi.messages.AppleMidiMessage;
 import io.github.leovr.rtipmidi.messages.MidiCommandHeader;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 import io.github.leovr.rtipmidi.model.MidiMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
@@ -58,7 +59,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
     }
 
     private static final int RECEIVE_BUFFER_LENGTH = 1024;
-
+    private final AppleMidiServer server;
     private final ExecutorService executorService;
     private final int ssrc;
     private final String name;
@@ -68,7 +69,6 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
     private final int port;
     private boolean running = true;
     private DatagramSocket socket;
-    private final Deque<AppleMidiSession> sessions = new ArrayDeque<>();
     private final Map<Integer, AppleMidiSessionConnection> currentSessions = new HashMap<>();
     private final List<SessionChangeListener> sessionChangeListeners = new ArrayList<>();
     private Thread thread;
@@ -77,14 +77,15 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
      * @param name The name under which the other peers should see this server
      * @param port The session server port which must be {@code control port + 1}
      */
-    public AppleMidiSessionServer(final InetAddress inetAddress, @Nonnull final String name, final int port) {
-        this(inetAddress, name, port, Executors.newCachedThreadPool());
+    public AppleMidiSessionServer(final InetAddress inetAddress, @Nonnull final String name, final int port, AppleMidiServer server) {
+        this(inetAddress, name, port, Executors.newCachedThreadPool(), server);
     }
 
-    AppleMidiSessionServer(final InetAddress inetAddress, @Nonnull final String name, final int port, final ExecutorService executorService) {
+    AppleMidiSessionServer(final InetAddress inetAddress, @Nonnull final String name, final int port, final ExecutorService executorService, AppleMidiServer server) {
         this.port = port;
         this.ssrc = new Random().nextInt();
         this.name = name;
+        this.server = server;
         this.executorService = executorService;
         this.inetAddress = inetAddress;
         midiCommandHandler.registerListener(this);
@@ -132,7 +133,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         while(connections.hasNext())
         {
             AppleMidiSessionConnection connection = connections.next();
-            AppleMidiServer server = connection.getAppleMidiServer();
+            AppleMidiServerAddress server = connection.getAppleMidiServerAddress();
             String rAddress = cleanAddress(server.getInetAddress());
             //System.err.println("Comparing " + remoteName + "(" + sAddress + ":"  + String.valueOf(port)+ ") & " + connection.getName()  + "(" + rAddress + ":" + String.valueOf(server.getPort()) + ")");
             if (rAddress.equals(sAddress) && remoteName.equals(connection.getName()))
@@ -147,7 +148,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         int rSsrc = 0;
         for (final Entry<Integer, AppleMidiSessionConnection> sessionConnection : currentSessions.entrySet())
         {
-            AppleMidiServer server = sessionConnection.getValue().getAppleMidiServer();
+            AppleMidiServerAddress server = sessionConnection.getValue().getAppleMidiServerAddress();
             if (server.getInetAddress().equals(address) && server.getPort() == port)
             {
                 conn = sessionConnection.getValue();
@@ -158,7 +159,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         {
             try
             {
-                AppleMidiServer server = conn.getAppleMidiServer();
+                AppleMidiServerAddress server = conn.getAppleMidiServerAddress();
                 System.err.println("Found Session connection to close " + server.toString());
                 AppleMidiEndSession goodbye = new AppleMidiEndSession(2, conn.getInitiatorToken(), rSsrc);
                 this.send(goodbye, server);
@@ -183,10 +184,10 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
                     public void run() {
                         if (receiveData[0] == AppleMidiCommand.MIDI_COMMAND_HEADER1) {
                             midiCommandHandler.handle(receiveData,
-                                    new AppleMidiServer(incomingPacket.getAddress(), incomingPacket.getPort()));
+                                    new AppleMidiServerAddress(incomingPacket.getAddress(), incomingPacket.getPort()));
                         } else {
                             midiMessageHandler.handle(receiveData,
-                                    new AppleMidiServer(incomingPacket.getAddress(), incomingPacket.getPort()));
+                                    new AppleMidiServerAddress(incomingPacket.getAddress(), incomingPacket.getPort()));
                         }
                     }
                 });
@@ -204,16 +205,15 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
     public void stopServer() {
         running = false;
         currentSessions.clear();
-        sessions.clear();
         executorService.shutdown();
         log.debug("MIDI session server stopped");
     }
 
-    private void send(final AppleMidiCommand midiCommand, final AppleMidiServer appleMidiServer) throws IOException {
+    private void send(final AppleMidiCommand midiCommand, final AppleMidiServerAddress appleMidiServer) throws IOException {
         send(midiCommand.toByteArray(), appleMidiServer);
     }
 
-    private void send(final byte[] data, final AppleMidiServer appleMidiServer) throws IOException {
+    private void send(final byte[] data, final AppleMidiServerAddress appleMidiServer) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("Sending data {} to server {}", Hex.encodeHexString(data), appleMidiServer);
         }
@@ -222,26 +222,24 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void send(@Nonnull final AppleMidiMessage appleMidiMessage,
-                     @Nonnull final AppleMidiServer appleMidiServer) throws IOException {
+                     @Nonnull final AppleMidiServerAddress appleMidiServer) throws IOException {
         send(appleMidiMessage.toByteArray(), appleMidiServer);
     }
 
     @Override
     public void onMidiInvitation(@Nonnull final AppleMidiInvitationRequest invitation,
-                                 @Nonnull final AppleMidiServer appleMidiServer) {
+                                 @Nonnull final AppleMidiServerAddress appleMidiServer) {
         log.info("MIDI invitation from: {}", appleMidiServer);
         if (getSessionServerState() == State.ACCEPT_INVITATIONS) {
             sendMidiInvitationAnswer(appleMidiServer, "accept",
                     new AppleMidiInvitationAccepted(invitation.getProtocolVersion(), invitation.getInitiatorToken(),
                             ssrc, name));
-            final AppleMidiSession appleMidiSession = sessions.pop();
             final AppleMidiSessionConnection connection =
-                    new AppleMidiSessionConnection(appleMidiSession, appleMidiServer, ssrc, this);
+                    new AppleMidiSessionConnection(server.getAppleMidiSession(), appleMidiServer, ssrc, this);
             connection.setInitiatorToken(invitation.getInitiatorToken());
             connection.setName(invitation.getName());
-            appleMidiSession.addSender(connection);
+            server.getAppleMidiSession().addSender(connection);
             currentSessions.put(invitation.getSsrc(), connection);
-            notifyMaxNumberOfSessions();
         } else {
             sendMidiInvitationAnswer(appleMidiServer, "decline",
                     new AppleMidiInvitationDeclined(invitation.getProtocolVersion(), invitation.getInitiatorToken(),
@@ -251,7 +249,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted acceptance,
-            @Nonnull AppleMidiServer appleMidiServer) {
+            @Nonnull AppleMidiServerAddress appleMidiServer) {
         System.err.println("Midi Invitation Accepted - SessionServer");
     }
 
@@ -259,10 +257,10 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
      * @return {@link State#FULL} if no sessions are available. {@link State#ACCEPT_INVITATIONS} otherwise
      */
     private State getSessionServerState() {
-        return sessions.isEmpty() ? State.FULL : State.ACCEPT_INVITATIONS;
+        return server.getAppleMidiSession() == null ? State.FULL : State.ACCEPT_INVITATIONS;
     }
 
-    private void sendMidiInvitationAnswer(final AppleMidiServer appleMidiServer, final String type,
+    private void sendMidiInvitationAnswer(final AppleMidiServerAddress appleMidiServer, final String type,
                                           final AppleMidiInvitation midiInvitation) {
         try {
             log.info("Sending invitation {} to: {}", type, appleMidiServer);
@@ -274,7 +272,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void onClockSynchronization(@Nonnull final AppleMidiClockSynchronization clockSynchronization,
-                                       @Nonnull final AppleMidiServer appleMidiServer) {
+                                       @Nonnull final AppleMidiServerAddress appleMidiServer) {
         if (clockSynchronization.getCount() == (byte) 0) { // CK0 Sequence
             final AppleMidiSessionConnection sessionTuple = currentSessions.get(clockSynchronization.getSsrc());
             final long currentTimestamp;
@@ -315,7 +313,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void onEndSession(@Nonnull final AppleMidiEndSession appleMidiEndSession,
-                             @Nonnull final AppleMidiServer appleMidiServer) {
+                             @Nonnull final AppleMidiServerAddress appleMidiServer) {
         log.info("Session end from: {}", appleMidiServer);
         final AppleMidiSessionConnection midiServer = currentSessions.get(appleMidiEndSession.getSsrc());
         if (midiServer != null) {
@@ -326,8 +324,6 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         final AppleMidiSessionConnection sessionTuple = currentSessions.remove(appleMidiEndSession.getSsrc());
         if (sessionTuple != null) {
             System.err.println("sessionTuple Removed");
-            sessions.add(sessionTuple.getAppleMidiSession());
-            notifyMaxNumberOfSessions();
         }
     }
 
@@ -340,48 +336,6 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
         } else {
             log.debug("Could not find session for ssrc: {}", ssrc);
         }
-    }
-
-    /**
-     * Add a new {@link AppleMidiSession} to this server
-     *
-     * @param session The session to be added
-     */
-    public void addAppleMidiSession(@Nonnull final AppleMidiSession session) {
-        sessions.add(session);
-        notifyMaxNumberOfSessions();
-    }
-
-    /**
-     * Remove the {@link AppleMidiSession} from this server
-     *
-     * @param session The session to be removed
-     */
-    public void removeAppleMidiSession(@Nonnull final AppleMidiSession session) {
-        sessions.remove(session);
-        for (final Map.Entry<Integer, AppleMidiSessionConnection> entry : currentSessions.entrySet()) {
-            if (entry.getValue().getAppleMidiSession().equals(session)) {
-                final Integer ssrc = entry.getKey();
-                currentSessions.remove(ssrc);
-                notifyMaxNumberOfSessions();
-            }
-        }
-    }
-
-    /**
-     * Informs all {@link SessionChangeListener} about the new number of available sessions
-     */
-    private void notifyMaxNumberOfSessions() {
-        for (final SessionChangeListener listener : sessionChangeListeners) {
-            listener.onMaxNumberOfSessionsChange(sessions.size());
-        }
-    }
-
-    /**
-     * @return The current number of available sessions for receiving MIDI messages
-     */
-    public int getNumberOfAvailableSessions() {
-        return sessions.size();
     }
 
     /**
@@ -404,7 +358,7 @@ public class AppleMidiSessionServer implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined decline,
-            @Nonnull AppleMidiServer appleMidiServer) {
+            @Nonnull AppleMidiServerAddress appleMidiServer) {
         // TODO Auto-generated method stub
         
     }

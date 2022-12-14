@@ -4,7 +4,7 @@ import io.github.leovr.rtipmidi.messages.AppleMidiClockSynchronization;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationAccepted;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationDeclined;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationRequest;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 
 import javax.annotation.Nonnull;
 
@@ -17,7 +17,7 @@ public interface AppleMidiCommandListener extends EndSessionListener {
      * @param appleMidiServer The origin server of this message
      */
     void onMidiInvitationAccepted(@Nonnull final AppleMidiInvitationAccepted acceptance,
-                          @Nonnull final AppleMidiServer appleMidiServer);
+                          @Nonnull final AppleMidiServerAddress appleMidiServer);
 
     /**
      * This method is called for every invitation request.
@@ -26,7 +26,7 @@ public interface AppleMidiCommandListener extends EndSessionListener {
      * @param appleMidiServer The origin server of this message
      */
     void onMidiInvitationDeclined(@Nonnull final AppleMidiInvitationDeclined decline,
-    @Nonnull final AppleMidiServer appleMidiServer);
+    @Nonnull final AppleMidiServerAddress appleMidiServer);
     /**
      * This method is called for every invitation request.
      *
@@ -34,7 +34,7 @@ public interface AppleMidiCommandListener extends EndSessionListener {
      * @param appleMidiServer The origin server of this message
      */
     void onMidiInvitation(@Nonnull final AppleMidiInvitationRequest invitation,
-                          @Nonnull final AppleMidiServer appleMidiServer);
+                          @Nonnull final AppleMidiServerAddress appleMidiServer);
 
     /**
      * This method is called for every clock synchronization request.
@@ -43,6 +43,6 @@ public interface AppleMidiCommandListener extends EndSessionListener {
      * @param appleMidiServer      The origin server of this message
      */
     void onClockSynchronization(@Nonnull final AppleMidiClockSynchronization clockSynchronization,
-                                @Nonnull final AppleMidiServer appleMidiServer);
+                                @Nonnull final AppleMidiServerAddress appleMidiServer);
 
 }

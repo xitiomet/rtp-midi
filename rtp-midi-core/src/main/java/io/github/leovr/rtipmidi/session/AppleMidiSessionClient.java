@@ -16,7 +16,7 @@ import io.github.leovr.rtipmidi.messages.AppleMidiMessage;
 import io.github.leovr.rtipmidi.messages.MidiCommandHeader;
 import io.github.leovr.rtipmidi.messages.MidiTimestampPair;
 import io.github.leovr.rtipmidi.messages.RtpHeader;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 import io.github.leovr.rtipmidi.model.MidiMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
@@ -213,10 +213,10 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
                             if (receiveDataControl[0] == AppleMidiCommand.MIDI_COMMAND_HEADER1) {
                                 //System.err.println("INCOMING CONTROL COMMAND PACKET");
                                 midiCommandHandler.handle(receiveDataControl,
-                                        new AppleMidiServer(incomingPacketControl.getAddress(), incomingPacketControl.getPort()));
+                                        new AppleMidiServerAddress(incomingPacketControl.getAddress(), incomingPacketControl.getPort()));
                             } else {
                                 midiMessageHandler.handle(receiveDataControl,
-                                        new AppleMidiServer(incomingPacketControl.getAddress(), incomingPacketControl.getPort()));
+                                        new AppleMidiServerAddress(incomingPacketControl.getAddress(), incomingPacketControl.getPort()));
                             }
                         }
                     });
@@ -258,10 +258,10 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
                             if (receiveDataSession[0] == AppleMidiCommand.MIDI_COMMAND_HEADER1) {
                                 //System.err.println("INCOMING SESSION COMMAND PACKET");
                                 midiCommandHandler.handle(receiveDataSession,
-                                        new AppleMidiServer(incomingPacketSession.getAddress(), incomingPacketSession.getPort()));
+                                        new AppleMidiServerAddress(incomingPacketSession.getAddress(), incomingPacketSession.getPort()));
                             } else {
                                 midiMessageHandler.handle(receiveDataSession,
-                                        new AppleMidiServer(incomingPacketSession.getAddress(), incomingPacketSession.getPort()));
+                                        new AppleMidiServerAddress(incomingPacketSession.getAddress(), incomingPacketSession.getPort()));
                             }
                         }
                     });
@@ -281,7 +281,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
     public void invitePeerAgainViaSession(AppleMidiInvitationAccepted acceptance)
     {
         //System.err.println("Invite peer again");
-        AppleMidiServer outgoingServer = new AppleMidiServer(this.inetAddress, getSessionPort());
+        AppleMidiServerAddress outgoingServer = new AppleMidiServerAddress(this.inetAddress, getSessionPort());
         this.initiatorToken = acceptance.getInitiatorToken();
         AppleMidiInvitationRequest invitation = new AppleMidiInvitationRequest(2, this.initiatorToken, this.ssrc, this.localName);
         try
@@ -330,11 +330,11 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
         sendControl(appleMidiMessage.toByteArray());
     }
 
-    private void send(final AppleMidiCommand midiCommand, final AppleMidiServer appleMidiServer) throws IOException {
+    private void send(final AppleMidiCommand midiCommand, final AppleMidiServerAddress appleMidiServer) throws IOException {
         send(midiCommand.toByteArray(), appleMidiServer);
     }
 
-    private void send(final byte[] data, final AppleMidiServer appleMidiServer) throws IOException {
+    private void send(final byte[] data, final AppleMidiServerAddress appleMidiServer) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("Sending data {} to server {}", Hex.encodeHexString(data), appleMidiServer);
         }
@@ -343,7 +343,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void send(@Nonnull final AppleMidiMessage appleMidiMessage,
-                     @Nonnull final AppleMidiServer appleMidiServer) throws IOException {
+                     @Nonnull final AppleMidiServerAddress appleMidiServer) throws IOException {
 
         //System.err.println("SENDING SESSION MIDI DATAGRAM " + String.valueOf(appleMidiServer.getPort()));
         send(appleMidiMessage.toByteArray(), appleMidiServer);
@@ -351,13 +351,13 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void onMidiInvitation(@Nonnull final AppleMidiInvitationRequest invitation,
-                                 @Nonnull final AppleMidiServer appleMidiServer) {
+                                 @Nonnull final AppleMidiServerAddress appleMidiServer) {
         
     }
 
     @Override
     public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted acceptance,
-            @Nonnull AppleMidiServer appleMidiServer) {
+            @Nonnull AppleMidiServerAddress appleMidiServer) {
         int port = appleMidiServer.getPort();
         //System.err.println("onMidiInvitationAccepted(" + String.valueOf(port) + ")");
         if (port == getControlPort())
@@ -388,7 +388,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
                     new AppleMidiClockSynchronization(this.ssrc, (byte) 0, currentTimestamp, 0L, 0L);
         try {
             //System.err.println("Sending clock sync CK0");
-            send(clockSynchronizationRequest, new AppleMidiServer(this.inetAddress, this.getSessionPort()));
+            send(clockSynchronizationRequest, new AppleMidiServerAddress(this.inetAddress, this.getSessionPort()));
         } catch (final IOException e) {
             log.error("IOException while sending clock synchronization", e);
             e.printStackTrace(System.err);
@@ -397,7 +397,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void onClockSynchronization(@Nonnull final AppleMidiClockSynchronization clockSynchronization,
-                                       @Nonnull final AppleMidiServer appleMidiServer) {
+                                       @Nonnull final AppleMidiServerAddress appleMidiServer) {
        //System.err.println("Client incoming clock sync! " + String.valueOf(appleMidiServer.getPort()));
        if (clockSynchronization.getCount() == (byte) 1) { // CK1 Sequence
             //System.err.println("Clock CK1");
@@ -415,7 +415,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void onEndSession(@Nonnull final AppleMidiEndSession appleMidiEndSession,
-                             @Nonnull final AppleMidiServer appleMidiServer) {
+                             @Nonnull final AppleMidiServerAddress appleMidiServer) {
         log.info("Session end from: {}", appleMidiServer);
         this.session.onEndSession(appleMidiEndSession, appleMidiServer);
         this.stopClient();
@@ -462,7 +462,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
     @Override
     public void sendMidiMessage(@Nonnull MidiMessage message, long timestamp) {
         sequenceNumber++;
-        final AppleMidiServer appleMidiServer = new AppleMidiServer(this.inetAddress, this.getSessionPort());
+        final AppleMidiServerAddress appleMidiServer = new AppleMidiServerAddress(this.inetAddress, this.getSessionPort());
         final long currentTimeIn100Microseconds = this.getCurrentTimestamp();
         final int rtpTimestamp = ((int) currentTimeIn100Microseconds);
         final RtpHeader rtpHeader =
@@ -486,7 +486,7 @@ public class AppleMidiSessionClient implements AppleMidiCommandListener, AppleMi
 
     @Override
     public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined decline,
-            @Nonnull AppleMidiServer appleMidiServer) {
+            @Nonnull AppleMidiServerAddress appleMidiServer) {
         System.err.println("Invitation Declined!");
         this.stopClient();
         this.session.onMidiInvitationDeclined(decline, appleMidiServer);

@@ -11,7 +11,7 @@ import io.github.leovr.rtipmidi.messages.AppleMidiInvitation;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationAccepted;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationDeclined;
 import io.github.leovr.rtipmidi.messages.AppleMidiInvitationRequest;
-import io.github.leovr.rtipmidi.model.AppleMidiServer;
+import io.github.leovr.rtipmidi.model.AppleMidiServerAddress;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -62,7 +62,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
     private final InetAddress inetAddress;
     private final AppleMidiCommandHandler handler;
     private DatagramSocket socket;
-    private final List<AppleMidiServer> acceptedServers = new ArrayList<>();
+    private final List<AppleMidiServerAddress> acceptedServers = new ArrayList<>();
     private final List<EndSessionListener> endSessionListeners = new ArrayList<>();
 
     /**
@@ -132,7 +132,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
      * Sends a end session message to all servers and stops the main loop.
      */
     public void stopServer() {
-        for (final AppleMidiServer server : acceptedServers) {
+        for (final AppleMidiServerAddress server : acceptedServers) {
             try {
                 log.info("Sending end session to {}", server);
                 send(new AppleMidiEndSession(2, getNewInitiatorToken(), ssrc), server);
@@ -157,7 +157,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
 
                 final DatagramPacket incomingPacket = initDatagramPacket(receiveData);
                 socket.receive(incomingPacket);
-                handler.handle(receiveData, new AppleMidiServer(incomingPacket.getAddress(), incomingPacket.getPort()));
+                handler.handle(receiveData, new AppleMidiServerAddress(incomingPacket.getAddress(), incomingPacket.getPort()));
             } catch (final SocketTimeoutException ignored) {
             } catch (final IOException e) {
                 log.error("IOException while receiving", e);
@@ -172,7 +172,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
 
     @Override
     public void onMidiInvitation(@Nonnull final AppleMidiInvitationRequest invitation,
-                                 @Nonnull final AppleMidiServer appleMidiServer) {
+                                 @Nonnull final AppleMidiServerAddress appleMidiServer) {
         log.info("MIDI invitation from: {}", appleMidiServer);
         final boolean contains = acceptedServers.contains(appleMidiServer);
         if (contains) {
@@ -193,7 +193,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
 
     }
 
-    private void sendMidiInvitationAnswer(final AppleMidiServer appleMidiServer, final String type,
+    private void sendMidiInvitationAnswer(final AppleMidiServerAddress appleMidiServer, final String type,
                                           final AppleMidiInvitation midiInvitation) {
         try {
             log.info("Sending invitation {} to: {}", type, appleMidiServer);
@@ -203,7 +203,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
         }
     }
 
-    private void send(final AppleMidiCommand midiCommand, final AppleMidiServer appleMidiServer) throws IOException {
+    private void send(final AppleMidiCommand midiCommand, final AppleMidiServerAddress appleMidiServer) throws IOException {
         final byte[] invitationAcceptedBytes = midiCommand.toByteArray();
 
         socket.send(new DatagramPacket(invitationAcceptedBytes, invitationAcceptedBytes.length,
@@ -212,7 +212,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
 
     @Override
     public void onClockSynchronization(@Nonnull final AppleMidiClockSynchronization clockSynchronization,
-                                       @Nonnull final AppleMidiServer appleMidiServer) {
+                                       @Nonnull final AppleMidiServerAddress appleMidiServer) {
     }
 
     private State getServerState() {
@@ -221,7 +221,7 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
 
     @Override
     public void onEndSession(@Nonnull final AppleMidiEndSession appleMidiEndSession,
-                             @Nonnull final AppleMidiServer appleMidiServer) {
+                             @Nonnull final AppleMidiServerAddress appleMidiServer) {
         log.info("Session ended with: {}", appleMidiServer);
         acceptedServers.remove(appleMidiServer);
         for (final EndSessionListener listener : endSessionListeners) {
@@ -231,8 +231,8 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
 
     public void closeConnection(InetAddress address, int port)
     {
-        AppleMidiServer dServer = null;
-        for (final AppleMidiServer server : acceptedServers)
+        AppleMidiServerAddress dServer = null;
+        for (final AppleMidiServerAddress server : acceptedServers)
         {
             if (server.getInetAddress().equals(address) && server.getPort() == port)
             {
@@ -273,14 +273,14 @@ public class AppleMidiControlServer extends Thread implements AppleMidiCommandLi
 
     @Override
     public void onMidiInvitationAccepted(@Nonnull AppleMidiInvitationAccepted acceptance,
-            @Nonnull AppleMidiServer appleMidiServer) {
+            @Nonnull AppleMidiServerAddress appleMidiServer) {
         // TODO Auto-generated method stub
         
     }
 
     @Override
     public void onMidiInvitationDeclined(@Nonnull AppleMidiInvitationDeclined decline,
-            @Nonnull AppleMidiServer appleMidiServer) {
+            @Nonnull AppleMidiServerAddress appleMidiServer) {
         // TODO Auto-generated method stub
         
     }
